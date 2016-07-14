@@ -29,11 +29,11 @@ let ImgFigure = React.createClass({
 
 		//如果props属性中指定了这张图片的位置看，则使用
 		if(this.props.arrange.pos){
-			styleObj = this.props.arrange.pos
-		}
+			styleObj = this.props.arrange.pos;
+    }
 		return (
-			<figure className="img-figure">
-					<img src={this.props.data.url} style={styleObj} alt={this.props.data.title} />
+			<figure className="img-figure" id={this.props.flag} style={styleObj}>
+				<img src={this.props.data.url}  alt={this.props.data.title}  />
 				<figcaption className="img-title">
 					<h2>{this.props.data.title}</h2>
 				</figcaption>
@@ -45,45 +45,46 @@ let ImgFigure = React.createClass({
 
 let AppComponent = React.createClass({
   Constant:{
-	centerPos:{
-		left:0,
-		right:0
-	},
-	hPosRange:{	//水平方向取值范围
-		leftSecX:[0,0],
-		rightSecX:[0,0],
-		y:[0,0]
-	},
-	vPosRange:{	//垂直方向的取值范围
-		x:[0,0],
-		topY:[0,0]
-	}
+  	centerPos:{
+  		left:0,
+  		right:0
+  	},
+  	hPosRange:{	//水平方向取值范围
+  		leftSecX:[0,0],
+  		rightSecX:[0,0],
+  		y:[0,0]
+  	},
+  	vPosRange:{	//垂直方向的取值范围
+  		x:[0,0],
+  		topY:[0,0]
+  	}
   },
-  getInitialState(){
-	return {
-		imgsArrangeArr:[]
-	};
+  getInitialState:function(){
+  	return {
+  		imgsArrangeArr:[]
+  	};
   },
-  componentDidMount: function(){	
+  componentDidMount: function(){
   	let stageDOM = this.refs.stage,
   		stageW = stageDOM.scrollWidth,
   		stageH = stageDOM.scrollHeight,
   		halfStageW = Math.ceil(stageW/2),
   		halfStageH = Math.ceil(stageH/2),
   		//拿到一个imageFigure的大小
-  		imgFigureDOM = this.refs.imgFigure0,
+  		imgFigureDOM =document.querySelector('#imgFigure0'),
   		imgW = imgFigureDOM.scrollWidth,
   		imgH = imgFigureDOM.scrollHeight,
   		halfImgW = Math.ceil(imgW/2),
   		halfImgH = Math.ceil(imgH/2);
 
-  	this.state.centerPos = {
+    //计算图片中心点的位置
+  	this.Constant.centerPos = {
   		left: halfStageW - halfImgW,
   		top: halfStageH - halfImgH
   	}
   	
-  	console.log(this.refs.imgFigure0,this.refs.imgFigure0.context);
-  	//计算左侧，右侧区域图片排布位置的取值范围
+  	
+  //计算左侧，右侧区域图片排布位置的取值范围
 	this.Constant.hPosRange.leftSecX[0] = -halfImgW;
 	this.Constant.hPosRange.leftSecX[1] = halfStageW - halfImgW*3;
 	this.Constant.hPosRange.rightSecX[0] = halfStageW + halfImgW;
@@ -94,8 +95,8 @@ let AppComponent = React.createClass({
 	//计算上侧区域图片排布位置的取值范围
 	this.Constant.vPosRange.topY[0] = -halfImgH
 	this.Constant.vPosRange.topY[1] = halfStageH - halfImgH*3;
-	this.Constant.vPosRange.x[0] = -halfImgW - imgW;
-	this.Constant.vPosRange.x[1] = halfImgW;
+	this.Constant.vPosRange.x[0] = -halfStageH - imgW;
+	this.Constant.vPosRange.x[1] = halfStageW;
 
 	this.rearrange(0);
   },
@@ -122,6 +123,7 @@ let AppComponent = React.createClass({
   	//首选居中 centerIndex的图片
   	imgsArrangeCenterArr[0].pos = centerPos;
 
+    console.log(topImgNum);
   	//取出要布局上侧的图片状态信息
   	topImgSpliceIndex = Math.ceil(Math.random()*(imgsArrangeArr.length - topImgNum));
   	imgsArrangeTopArr = imgsArrangeArr.splice(topImgSpliceIndex,topImgNum);
@@ -167,16 +169,15 @@ let AppComponent = React.createClass({
 		imgFigures = [];
 
 	imageDatum.forEach(function(value,index){
-
-		if(!this.state.imgsArrangeArr[index]){ 
-			this.state.imgsArrangeArr[index] ={
+    if(!this.state.imgsArrangeArr[index]){
+      this.state.imgsArrangeArr[index] = {
 				pos:{
 					left:0,
 					top:0
 				}
-			}
+			};
 		}
-		imgFigures.push(<ImgFigure data={value} key={value.filename} ref={'imgFigure'+index} arrange={this.state.imgsArrangeArr[index]} />);
+		imgFigures.push(<ImgFigure data={value} key={value.filename} flag={'imgFigure'+index} arrange={this.state.imgsArrangeArr[index]} />);
 	}.bind(this));
 
     return (
