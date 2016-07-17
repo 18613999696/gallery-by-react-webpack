@@ -22,15 +22,30 @@ imageDatum = ((imageDatumArr) => {
 function getRangeRandom(lt,gt){
 	return Math.ceil(Math.random()*(gt - lt) + lt);
 }
+/*
+ *获取0-30°区间内的一个任意正负值
+ */
+function get30DegRandom(){
+  return ( (Math.random()>0.5?'':'-') +Math.ceil(Math.random()*30) );
+}
+
 
 let ImgFigure = React.createClass({
 	render:function(){
 		let styleObj = {};
 
-		//如果props属性中指定了这张图片的位置看，则使用
+		//如果props属性中指定了这张图片的位置，则使用
 		if(this.props.arrange.pos){
 			styleObj = this.props.arrange.pos;
     }
+
+    //如果图片的旋转角度有值并且不为0，添加旋转角度
+    if(this.props.arrange.rotate){
+      ['-moz-','-webkit-','-ms-',''].forEach(function(value){
+        styleObj[value+'transform'] = 'rotate('+this.props.arrange.rotate +'deg)';
+      }.bind(this));
+    }
+    
 		return (
 			<figure className="img-figure" id={this.props.flag} style={styleObj}>
 				<img src={this.props.data.url}  alt={this.props.data.title}  />
@@ -61,7 +76,18 @@ let AppComponent = React.createClass({
   },
   getInitialState:function(){
   	return {
-  		imgsArrangeArr:[]
+  		imgsArrangeArr:[
+        /*
+          {
+            pos:{
+              left:0,
+              right:0
+            },  //图片的定位信息
+            rotate:0  //图片的旋转角度
+          }
+
+         */
+      ]
   	};
   },
   componentDidMount: function(){
@@ -84,21 +110,21 @@ let AppComponent = React.createClass({
   	}
   	
   	
-  //计算左侧，右侧区域图片排布位置的取值范围
-	this.Constant.hPosRange.leftSecX[0] = -halfImgW;
-	this.Constant.hPosRange.leftSecX[1] = halfStageW - halfImgW*3;
-	this.Constant.hPosRange.rightSecX[0] = halfStageW + halfImgW;
-	this.Constant.hPosRange.rightSecX[1] = stageW - halfImgW;
-	this.Constant.hPosRange.y[0] = -halfImgH;
-	this.Constant.hPosRange.y[1] = stageH - halfImgH;
+    //计算左侧，右侧区域图片排布位置的取值范围
+  	this.Constant.hPosRange.leftSecX[0] = -halfImgW;
+  	this.Constant.hPosRange.leftSecX[1] = halfStageW - halfImgW*3;
+  	this.Constant.hPosRange.rightSecX[0] = halfStageW + halfImgW;
+  	this.Constant.hPosRange.rightSecX[1] = stageW - halfImgW;
+  	this.Constant.hPosRange.y[0] = -halfImgH;
+  	this.Constant.hPosRange.y[1] = stageH - halfImgH;
 
-	//计算上侧区域图片排布位置的取值范围
-	this.Constant.vPosRange.topY[0] = -halfImgH
-	this.Constant.vPosRange.topY[1] = halfStageH - halfImgH*3;
-	this.Constant.vPosRange.x[0] = -halfStageH - imgW;
-	this.Constant.vPosRange.x[1] = halfStageW;
+  	//计算上侧区域图片排布位置的取值范围
+  	this.Constant.vPosRange.topY[0] = -halfImgH
+  	this.Constant.vPosRange.topY[1] = halfStageH - halfImgH*3;
+  	this.Constant.vPosRange.x[0] = -halfStageH - imgW;
+  	this.Constant.vPosRange.x[1] = halfStageW;
 
-	this.rearrange(0);
+  	this.rearrange(0);
   },
   /*
    *重新布局所有图片
@@ -123,17 +149,22 @@ let AppComponent = React.createClass({
   	//首选居中 centerIndex的图片
   	imgsArrangeCenterArr[0].pos = centerPos;
 
-    console.log(topImgNum);
+    //居中的 centerIndex的图片不需要旋转
+    imgsArrangeCenterArr[0].rotate = 0;
+
   	//取出要布局上侧的图片状态信息
   	topImgSpliceIndex = Math.ceil(Math.random()*(imgsArrangeArr.length - topImgNum));
   	imgsArrangeTopArr = imgsArrangeArr.splice(topImgSpliceIndex,topImgNum);
 
   	//布局位于上侧的图片
   	imgsArrangeTopArr.forEach(function(value,index){
-  		imgsArrangeTopArr[index].pos = {
-  			top: getRangeRandom(vPosRangeTopY[0],vPosRangeTopY[1]),
-  			left:getRangeRandom(vPosRangeX[0],vPosRangeX[1])
-  		}
+      imgsArrangeTopArr[index] = {
+        pos:{
+          top: getRangeRandom(vPosRangeTopY[0],vPosRangeTopY[1]),
+          left:getRangeRandom(vPosRangeX[0],vPosRangeX[1])
+        },
+        rotate:get30DegRandom()
+      };
   	});
 
   	//布局左右两侧的图片
@@ -148,10 +179,13 @@ let AppComponent = React.createClass({
   		}
 
 
-  		imgsArrangeArr[i].pos = {
-  			top:getRangeRandom(hPosRangeY[0],hPosRangeY[1]),
-  			left:getRangeRandom(hPosRangeLORX[0],hPosRangeLORX[1])
-  		}
+      imgsArrangeArr[i] = {
+        pos:{
+          top:getRangeRandom(hPosRangeY[0],hPosRangeY[1]),
+          left:getRangeRandom(hPosRangeLORX[0],hPosRangeLORX[1])
+        },
+        rotate:get30DegRandom()
+      };
   	}
 
   	if(imgsArrangeTopArr && imgsArrangeTopArr[0]){
@@ -165,20 +199,21 @@ let AppComponent = React.createClass({
   	});
   },
   render: function() {
-	let controllerUnits = [],
-		imgFigures = [];
+  	let controllerUnits = [],
+  		  imgFigures = [];
 
-	imageDatum.forEach(function(value,index){
-    if(!this.state.imgsArrangeArr[index]){
-      this.state.imgsArrangeArr[index] = {
-				pos:{
-					left:0,
-					top:0
-				}
-			};
-		}
-		imgFigures.push(<ImgFigure data={value} key={value.filename} flag={'imgFigure'+index} arrange={this.state.imgsArrangeArr[index]} />);
-	}.bind(this));
+  	imageDatum.forEach(function(value,index){
+      if(!this.state.imgsArrangeArr[index]){
+        this.state.imgsArrangeArr[index] = {
+  				pos:{
+  					left:0,
+  					top:0
+  				},
+          rotate:0
+  			};
+  		}
+  		imgFigures.push(<ImgFigure data={value} key={value.filename} flag={'imgFigure'+index} arrange={this.state.imgsArrangeArr[index]} />);
+  	}.bind(this));
 
     return (
       <section className="stage" ref="stage">
